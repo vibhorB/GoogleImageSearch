@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ImageSearch</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="imagesize">Image Size</string>
+    <string name="colorfilter">Color Filter</string>
+    <string name="imagetype">Image Type</string>
+    <string name="site">Site filter</string>
+    <string name="searchHint">Enter image search</string>
+    <string name="searchBtn">Search</string>
+    <string name="title_activity_full_image">FullImageActivity</string>
+    <string name="filter">Filter</string>
+    <string name="search">Search</string>
+    <string name="title_activity_filter">Apply Filters</string>
+
+</resources>

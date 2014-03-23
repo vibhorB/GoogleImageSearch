@@ -1,0 +1,278 @@
+package com.codepath.imagesearch;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.SearchView;
+import android.widget.SearchView.OnQueryTextListener;
+import android.widget.Toast;
+
+import com.codepath.search.api.ImageSearchRestClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+import com.loopj.android.image.SmartImageView;
+
+public class ImageActivity extends Activity {
+
+	private Filters filters;
+	
+	public static final String COLOR_KEY = "imgcolor";
+	public static final String SIZE_KEY = "imgsz";
+	public static final String TYPE_KEY = "imgtype";
+	public static final String SITE_KEY = "as_sitesearch";
+	private GridView imgGridView;
+	private ArrayList<Image> images = new ArrayList<Image>();
+	private ImageAdapter imgAdapter;
+	private SearchView searchView;
+	
+	private int FILTER_REQUEST_CODE = 2;
+	public static String FILTER_KEY = "result";
+	private String queryVal;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_image);
+		
+		filters = new Filters();
+		
+		//iv = (ImageView) findViewById(R.id.ivImg);
+		//searchButton = (Button) findViewById(R.id.btnSearch);
+		//setupSearchButtonClick();
+		setGridView();
+		
+	}
+	
+	private void setGridView(){
+		imgGridView = (GridView) findViewById(R.id.gvImage);
+		//images = new ArrayList<Image>();
+		//images.add(im);
+		imgAdapter = new ImageAdapter(ImageActivity.this, images);
+		imgGridView.setAdapter(imgAdapter);
+
+		imgGridView.setOnItemClickListener(new OnItemClickListener() {
+	        public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+	        	Intent intent = new Intent(getApplicationContext(),
+	        			FullImageActivity.class);
+	        			Image img = images.get(position);
+	        			intent.putExtra("result", img);
+	        			startActivity(intent);
+	        }
+	    });
+		
+		imgGridView.setOnItemLongClickListener(new OnItemLongClickListener() {
+	        public boolean onItemLongClick(AdapterView<?> parent, View v, int position, long id) {
+	        	onShareItem(v);
+	        	return true;
+	        }
+	    });
+		
+		imgGridView.setOnScrollListener(new EndlessScrollListener() {
+	        @Override
+	        public void onLoadMore(int page, int totalItemsCount) {
+	                // Triggered only when new data needs to be appended to the list
+	                // Add whatever code is needed to append new items to your AdapterView
+	        	if(page<=8){
+	        		makeNetworkCall(queryVal, page);
+	        	}
+	                // or customLoadMoreDataFromApi(totalItemsCount); 
+	        }
+	        });
+	}
+
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.image, menu);
+		 MenuItem searchItem = menu.findItem(R.id.action_search);
+		    searchView = (SearchView) searchItem.getActionView();
+		    try{
+		    	searchView.setOnQueryTextListener(new OnQueryTextListener() {
+				       @Override
+				       public boolean onQueryTextSubmit(String query) {
+				    	   clearAdapter();
+				    	   //System.gc();
+				    	   queryVal = query;
+				    	   makeNetworkCall(query, 0);
+				            return true;
+				       }
+
+				       @Override
+				       public boolean onQueryTextChange(String newText) {
+				           return false;
+				       }
+				   });
+		    }catch(Exception ex){
+		    	System.out.println(ex.getStackTrace());
+		    }
+		    
+		   return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle presses on the action bar items
+	    switch (item.getItemId()) {
+	        case R.id.action_search:
+	            //openSettings();
+//	        	clearAdapter();
+//	        	makeNetworkCall("android", null, null, null, null,0);
+	            return true;
+	        case R.id.action_filter:
+	        	launchFilter();
+	        	return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
+	
+	private void clearAdapter() {
+		imgAdapter.clear();
+		imgAdapter.notifyDataSetInvalidated();
+		
+	}
+	
+	public void onShareItem(View v) {
+	    // Get access to bitmap image from view
+	    SmartImageView ivImage = (SmartImageView) findViewById(R.id.imgGrid);
+	    Uri bmpUri = getLocalBitmapUri(ivImage);
+	    if (bmpUri != null) {
+	        // Construct a ShareIntent with link to image
+	        Intent shareIntent = new Intent();
+	        shareIntent.setAction(Intent.ACTION_SEND);
+	        shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
+	        shareIntent.setType("image/*");
+	        // Launch sharing dialog for image
+	        startActivity(Intent.createChooser(shareIntent, "Share Content"));	
+	    } else {
+	        // ...sharing failed, handle error
+	    	Toast.makeText(this, "Sharing failed", Toast.LENGTH_SHORT).show();
+	    }
+	}
+
+	public Uri getLocalBitmapUri(ImageView imageView) {
+	    Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+	    // Write image to default external storage directory   
+	    Uri bmpUri = null;
+	    try {
+	        File file =  new File(Environment.getExternalStoragePublicDirectory(  
+	            Environment.DIRECTORY_DOWNLOADS), "share_image.png");  
+	        FileOutputStream out = new FileOutputStream(file);
+	        bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+	        out.close();
+	        bmpUri = Uri.fromFile(file);
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	    
+	    return bmpUri;
+	}
+
+	private void launchFilter() {
+		Intent i = new Intent(ImageActivity.this, FilterActivity.class);
+		i.putExtra(FILTER_KEY, filters);
+		startActivityForResult(i, FILTER_REQUEST_CODE);
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if(requestCode == FILTER_REQUEST_CODE){
+			if(resultCode == RESULT_OK){
+				//Toast.makeText(this, data.getStringExtra(FOO_KEY), Toast.LENGTH_SHORT).show();
+				
+				filters = (Filters) data.getSerializableExtra(FILTER_KEY);
+				//Toast.makeText(this, filters.getColor(), Toast.LENGTH_LONG).show();
+				
+			}
+		}
+	}
+
+	/*
+	 * params -
+	 * as_sitesearch
+	 * imgcolor
+	 * imgsz
+	 * imgtype
+	 */
+	private void makeNetworkCall(String query, int page){
+		String q = "q="+query+"&v=1.0&&rsz=8&imgsz=medium&start="+page;
+		ImageSearchRestClient.get(q, constructRequestParam(), new JsonHttpResponseHandler(){
+			
+			public void onSuccess(JSONObject jsonResponse){
+				try {
+					JSONObject responseData = (JSONObject) jsonResponse.get("responseData");
+					JSONArray results = responseData.getJSONArray("results");
+					parseJSONAndExtractImage(results);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+		
+	}
+	
+	private void parseJSONAndExtractImage(JSONArray jsonImages) throws JSONException{
+		ArrayList<Image> list = new ArrayList<Image>();
+		for(int i = 0; i < jsonImages.length(); i++){
+			JSONObject jsonImg = jsonImages.getJSONObject(i);
+			String thumb = jsonImg.getString("tbUrl");
+			if(isEmpty(thumb)){
+				Toast.makeText(this, "thumb url null", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			Image img = new Image(jsonImg.getString("url"), jsonImg.getString("titleNoFormatting"), thumb );
+			list.add(img);
+		}
+		imgAdapter.addAll(list);
+	}
+	
+	private RequestParams constructRequestParam(){
+		RequestParams params = new RequestParams();
+		
+		if(!isEmpty(filters.getColor())){
+			params.put(COLOR_KEY, filters.getColor());
+		}
+		if(!isEmpty(filters.getSize())){
+			params.put(SIZE_KEY, filters.getSize());
+		}
+		if(!isEmpty(filters.getType())){
+			params.put(TYPE_KEY, filters.getType());
+		}
+		if(!isEmpty(filters.getColor())){
+			params.put(SITE_KEY, filters.getSite());
+		}
+		
+		return params;
+	}
+	
+	private boolean isEmpty(String str){
+		if(str == null || str.trim().length() == 0 || str.equals("") || str.equals("any")){
+			return true;
+		}
+		return false;
+	}
+
+}
