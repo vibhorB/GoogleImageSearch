@@ -49,7 +49,7 @@ public class ImageAdapter extends ArrayAdapter<Image>{
         try
         {
             holder.txtTitle.setText(images.get(position).getImageTitle());
-            holder.imgGrid.setImageUrl(images.get(position).getImageUrl());
+            holder.imgGrid.setImageUrl(images.get(position).getThumbUrl());
         }
         catch (Exception e) 
         {

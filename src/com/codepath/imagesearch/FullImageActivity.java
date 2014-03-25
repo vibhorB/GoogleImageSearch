@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -15,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.ShareActionProvider;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.loopj.android.image.SmartImageView;
@@ -27,18 +29,14 @@ public class FullImageActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_full_image);
+		getActionBar().setDisplayHomeAsUpEnabled(true);
 		
 		 Image img = (Image) getIntent().getSerializableExtra("result");
 		 SmartImageView imView = (SmartImageView) findViewById(R.id.ivFull);
-	//	 try{
-			 imView.setImageUrl(img.getImageUrl());
-//		 }catch(RuntimeException ex){
-//			 Toast.makeText(this, "Bad image, cant load", Toast.LENGTH_SHORT);
-//			 finish();
-//		 }finally{
-//			 Toast.makeText(this, "Bad image, cant load", Toast.LENGTH_SHORT);
-//			 finish();
-//		 }
+		 TextView tvTtl = (TextView) findViewById(R.id.txtFullTitle);
+		 imView.setImageUrl(img.getImageUrl());
+		 tvTtl.setText(img.getImageTitle());
+
 	}
 
 	@Override
@@ -53,49 +51,55 @@ public class FullImageActivity extends Activity {
 		    return true;
 	}
 	
-//	@Override
-//	public boolean onOptionsItemSelected(MenuItem item) {
-//	    // Handle presses on the action bar items
-//	    switch (item.getItemId()) {
-//	        case R.id.menu_item_share:
-//	        	setupShareAction();
-//	            return true;
-//	        
-//	        default:
-//	            return super.onOptionsItemSelected(item);
-//	    }
-//	}
+	@Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case android.R.id.home:
+        	setResult(RESULT_OK);
+            this.finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 	
 	public void setupShareAction() {
 	    // Fetch Bitmap Uri locally
-//		try{
 			 SmartImageView ivImage = (SmartImageView) findViewById(R.id.ivFull);
 			    Uri bmpUri = getLocalBitmapUri(ivImage); // see previous section
 			    // Create share intent as described above
-			    Intent shareIntent = new Intent();
-			    shareIntent.setAction(Intent.ACTION_SEND);
-			    shareIntent.setAction(Intent.ACTION_SEND);
-			    shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
-			    shareIntent.setType("image/*");
-			    // Attach share event to the menu item provider
-			    miShareAction.setShareIntent(shareIntent);
-//		}catch(Exception ex){
-//			Toast.makeText(this, "setupShareAction :Bad image, cant load", Toast.LENGTH_SHORT);
-//			 finish();
-//		}finally{
-//			Toast.makeText(this, "setupShareAction :Bad image, cant load", Toast.LENGTH_SHORT);
-//			 finish();
-//		}
-	   
+			    if(bmpUri != null){
+			    	Intent shareIntent = new Intent();
+				    shareIntent.setAction(Intent.ACTION_SEND);
+				    shareIntent.setAction(Intent.ACTION_SEND);
+				    shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
+				    shareIntent.setType("image/*");
+				    // Attach share event to the menu item provider
+				    miShareAction.setShareIntent(shareIntent);
+			    }else{
+			    	Toast.makeText(this, "ColorDrawable, cant share this image", Toast.LENGTH_SHORT).show();
+					 //finish();
+			    }	   
 	}
-	
+		
 	public Uri getLocalBitmapUri(ImageView imageView) {
-	    Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+		 Bitmap bitmap;
+		 Drawable drawable = imageView.getDrawable();
+		if(drawable instanceof BitmapDrawable){
+		    bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+		}else {
+			//Toast.makeText(this, "Colordrawable", Toast.LENGTH_SHORT).show();
+//			bitmap = Bitmap.createBitmap(drawable.getBounds().width(), drawable.getBounds().height(), Config.ARGB_8888);
+//		    Canvas canvas = new Canvas(bitmap); 
+//		    drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+//		    drawable.draw(canvas);
+			return null;
+		}
 	    // Write image to default external storage directory   
 	    Uri bmpUri = null;
 	    try {
+	    	String fileName = "share_"+ System.currentTimeMillis() +".png";
 	        File file =  new File(Environment.getExternalStoragePublicDirectory(  
-	            Environment.DIRECTORY_DOWNLOADS), "share_image.png");  
+	            Environment.DIRECTORY_DOWNLOADS), fileName);  
 	        FileOutputStream out = new FileOutputStream(file);
 	        bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
 	        out.close();

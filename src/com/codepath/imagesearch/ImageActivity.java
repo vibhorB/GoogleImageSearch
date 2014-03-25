@@ -12,7 +12,10 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Bitmap.Config;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -113,7 +116,7 @@ public class ImageActivity extends Activity {
 				       @Override
 				       public boolean onQueryTextSubmit(String query) {
 				    	   clearAdapter();
-				    	   //System.gc();
+				    	   System.gc();
 				    	   queryVal = query;
 				    	   makeNetworkCall(query, 0);
 				            return true;
@@ -168,7 +171,7 @@ public class ImageActivity extends Activity {
 	        startActivity(Intent.createChooser(shareIntent, "Share Content"));	
 	    } else {
 	        // ...sharing failed, handle error
-	    	Toast.makeText(this, "Sharing failed", Toast.LENGTH_SHORT).show();
+	    	Toast.makeText(this, "ColorDrawable, cant share this image", Toast.LENGTH_SHORT).show();
 	    }
 	}
 
@@ -176,9 +179,22 @@ public class ImageActivity extends Activity {
 	    Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
 	    // Write image to default external storage directory   
 	    Uri bmpUri = null;
+	    Drawable drawable = imageView.getDrawable();
+		if(drawable instanceof BitmapDrawable){
+		    bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+		}else {
+			return null;
+//			Toast.makeText(this, "Colordrawable", Toast.LENGTH_SHORT).show();
+//			bitmap = Bitmap.createBitmap(drawable.getBounds().width(), drawable.getBounds().height(), Config.ARGB_8888);
+//		    Canvas canvas = new Canvas(bitmap); 
+//		    drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+//		    drawable.draw(canvas);
+		}
 	    try {
+	    	String fileName = "share_"+ System.currentTimeMillis() +".png";
 	        File file =  new File(Environment.getExternalStoragePublicDirectory(  
-	            Environment.DIRECTORY_DOWNLOADS), "share_image.png");  
+	            Environment.DIRECTORY_DOWNLOADS), fileName);  
+	    	//File file = new File(Environment.getDataDirectory(), "share_image.png");
 	        FileOutputStream out = new FileOutputStream(file);
 	        bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
 	        out.close();
@@ -209,15 +225,8 @@ public class ImageActivity extends Activity {
 		}
 	}
 
-	/*
-	 * params -
-	 * as_sitesearch
-	 * imgcolor
-	 * imgsz
-	 * imgtype
-	 */
 	private void makeNetworkCall(String query, int page){
-		String q = "q="+query+"&v=1.0&&rsz=8&imgsz=medium&start="+page;
+		String q = "q="+query+"&v=1.0&&rsz=8&imgsz=medium&start="+page*7;
 		ImageSearchRestClient.get(q, constructRequestParam(), new JsonHttpResponseHandler(){
 			
 			public void onSuccess(JSONObject jsonResponse){

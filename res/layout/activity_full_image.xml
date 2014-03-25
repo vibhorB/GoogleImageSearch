@@ -6,14 +6,26 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".FullImageActivity" >
+    tools:context=".FullImageActivity"
+    android:background="@drawable/android_back10" >
 
    <com.loopj.android.image.SmartImageView
         android:id="@+id/ivFull"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
         android:maxWidth="600dp"
         android:src="@android:drawable/screen_background_light" />
+   
+   <TextView
+       android:layout_below="@+id/ivFull" 
+        android:layout_centerInParent="true"
+        android:id="@+id/txtFullTitle"
+        android:layout_height="wrap_content" 
+        android:layout_width="wrap_content" 
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textSize="15sp">
+    </TextView>
 </RelativeLayout>
