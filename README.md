@@ -3,7 +3,7 @@ GoogleImageSearch
 
 Google Image Search App with share and download
 
-Features :
+**Features :**
 
 1. Image search via Google Image API
 2. View images in grid view with title
@@ -12,7 +12,7 @@ Features :
 5. Filter images based on size, site, type and color; filter will be applied to all subsequent searches
 6. Reset filters
 
-Required Features Completed :
+**Required Features Completed :**
 
 1. User can enter search query that will display grid of images from Google Image API
 2. User can filter search results by clicking Filter
@@ -20,7 +20,7 @@ Required Features Completed :
 4. User can tap on any image to see image full screen
 5. Infinte scroll down on grid view
 
-Optional features completed :
+**Optional features completed :**
 
 1. From full image view, user can share image
 2. From grid view, user can long press image to open share menu
@@ -31,7 +31,7 @@ Optional features completed :
 7. Toast messages in case of failures such as - No network, cannot share, download failed
 8. Improved styling by using Icons, logo and background image; Filter behaves as a dialog
 
-Screenshots -
+**Screenshots -**
 
 ![Screenshot](https://raw.githubusercontent.com/vibhorB/GoogleImageSearch/master/screenshots/first_screen.png)
 ![Screenshot](https://raw.githubusercontent.com/vibhorB/GoogleImageSearch/master/screenshots/enter_query.png)
