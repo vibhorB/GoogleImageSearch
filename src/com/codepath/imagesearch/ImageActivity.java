@@ -10,10 +10,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Bitmap.Config;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -52,17 +51,14 @@ public class ImageActivity extends Activity {
 	private int FILTER_REQUEST_CODE = 2;
 	public static String FILTER_KEY = "result";
 	private String queryVal;
+	private Context context;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_image);
-		
+		context = this;
 		filters = new Filters();
-		
-		//iv = (ImageView) findViewById(R.id.ivImg);
-		//searchButton = (Button) findViewById(R.id.btnSearch);
-		//setupSearchButtonClick();
 		setGridView();
 		
 	}
@@ -94,12 +90,9 @@ public class ImageActivity extends Activity {
 		imgGridView.setOnScrollListener(new EndlessScrollListener() {
 	        @Override
 	        public void onLoadMore(int page, int totalItemsCount) {
-	                // Triggered only when new data needs to be appended to the list
-	                // Add whatever code is needed to append new items to your AdapterView
 	        	if(page<=8){
 	        		makeNetworkCall(queryVal, page);
 	        	}
-	                // or customLoadMoreDataFromApi(totalItemsCount); 
 	        }
 	        });
 	}
@@ -107,7 +100,6 @@ public class ImageActivity extends Activity {
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.image, menu);
 		 MenuItem searchItem = menu.findItem(R.id.action_search);
 		    searchView = (SearchView) searchItem.getActionView();
@@ -115,10 +107,8 @@ public class ImageActivity extends Activity {
 		    	searchView.setOnQueryTextListener(new OnQueryTextListener() {
 				       @Override
 				       public boolean onQueryTextSubmit(String query) {
-				    	   clearAdapter();
-				    	   System.gc();
 				    	   queryVal = query;
-				    	   makeNetworkCall(query, 0);
+				    	   prepareCall();
 				            return true;
 				       }
 
@@ -138,23 +128,108 @@ public class ImageActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle presses on the action bar items
 	    switch (item.getItemId()) {
-	        case R.id.action_search:
-	            //openSettings();
-//	        	clearAdapter();
-//	        	makeNetworkCall("android", null, null, null, null,0);
-	            return true;
 	        case R.id.action_filter:
 	        	launchFilter();
+	        	return true;
+	        case R.id.action_reset:
+	        	filters = new Filters();
+	        	prepareCall();
 	        	return true;
 	        default:
 	            return super.onOptionsItemSelected(item);
 	    }
 	}
 	
+	private void prepareCall(){
+		clearAdapter();
+ 	   	System.gc();
+ 	   	if(!isEmpty(queryVal)){
+ 	 	   	makeNetworkCall(queryVal, 0);
+ 	   	}
+	}
+	
 	private void clearAdapter() {
 		imgAdapter.clear();
 		imgAdapter.notifyDataSetInvalidated();
 		
+	}
+
+	private void launchFilter() {
+		Intent i = new Intent(ImageActivity.this, FilterActivity.class);
+		i.putExtra(FILTER_KEY, filters);
+		startActivityForResult(i, FILTER_REQUEST_CODE);
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if(requestCode == FILTER_REQUEST_CODE){
+			if(resultCode == RESULT_OK){
+				filters = (Filters) data.getSerializableExtra(FILTER_KEY);
+				prepareCall();
+			}
+		}
+	}
+
+	private void makeNetworkCall(String query, int page){
+		String q = "q="+Uri.encode(query)+"&v=1.0&&rsz=8&start="+page*7;
+		ImageSearchRestClient.get(q, constructRequestParam(), new JsonHttpResponseHandler(){
+			
+			public void onSuccess(JSONObject jsonResponse){
+				try {
+					JSONObject responseData = (JSONObject) jsonResponse.get("responseData");
+					JSONArray results = responseData.getJSONArray("results");
+					parseJSONAndExtractImage(results);
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+			public void onFailure(Throwable e, JSONObject error) {
+			    // Handle the failure and alert the user to retry
+			   Toast.makeText(context, "Network failure : "+e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+			  }
+		});
+		
+	}
+	
+	private void parseJSONAndExtractImage(JSONArray jsonImages) throws JSONException{
+		ArrayList<Image> list = new ArrayList<Image>();
+		for(int i = 0; i < jsonImages.length(); i++){
+			JSONObject jsonImg = jsonImages.getJSONObject(i);
+			String thumb = jsonImg.getString("tbUrl");
+			if(isEmpty(thumb)){
+				Toast.makeText(this, "thumb url null", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			Image img = new Image(jsonImg.getString("url"), jsonImg.getString("titleNoFormatting"), thumb );
+			list.add(img);
+		}
+		imgAdapter.addAll(list);
+	}
+	
+	private RequestParams constructRequestParam(){
+		RequestParams params = new RequestParams();
+		
+		if(!isEmpty(filters.getColor())){
+			params.put(COLOR_KEY, filters.getColor());
+		}
+		if(!isEmpty(filters.getSize())){
+			params.put(SIZE_KEY, filters.getSize());
+		}
+		if(!isEmpty(filters.getType())){
+			params.put(TYPE_KEY, filters.getType());
+		}
+		if(!isEmpty(filters.getColor())){
+			params.put(SITE_KEY, filters.getSite());
+		}
+		
+		return params;
+	}
+	
+	private boolean isEmpty(String str){
+		if(str == null || str.trim().length() == 0 || str.equals("") || str.equals("any")){
+			return true;
+		}
+		return false;
 	}
 	
 	public void onShareItem(View v) {
@@ -204,84 +279,6 @@ public class ImageActivity extends Activity {
 	    }
 	    
 	    return bmpUri;
-	}
-
-	private void launchFilter() {
-		Intent i = new Intent(ImageActivity.this, FilterActivity.class);
-		i.putExtra(FILTER_KEY, filters);
-		startActivityForResult(i, FILTER_REQUEST_CODE);
-	}
-	
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if(requestCode == FILTER_REQUEST_CODE){
-			if(resultCode == RESULT_OK){
-				//Toast.makeText(this, data.getStringExtra(FOO_KEY), Toast.LENGTH_SHORT).show();
-				
-				filters = (Filters) data.getSerializableExtra(FILTER_KEY);
-				//Toast.makeText(this, filters.getColor(), Toast.LENGTH_LONG).show();
-				
-			}
-		}
-	}
-
-	private void makeNetworkCall(String query, int page){
-		String q = "q="+query+"&v=1.0&&rsz=8&imgsz=medium&start="+page*7;
-		ImageSearchRestClient.get(q, constructRequestParam(), new JsonHttpResponseHandler(){
-			
-			public void onSuccess(JSONObject jsonResponse){
-				try {
-					JSONObject responseData = (JSONObject) jsonResponse.get("responseData");
-					JSONArray results = responseData.getJSONArray("results");
-					parseJSONAndExtractImage(results);
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		});
-		
-	}
-	
-	private void parseJSONAndExtractImage(JSONArray jsonImages) throws JSONException{
-		ArrayList<Image> list = new ArrayList<Image>();
-		for(int i = 0; i < jsonImages.length(); i++){
-			JSONObject jsonImg = jsonImages.getJSONObject(i);
-			String thumb = jsonImg.getString("tbUrl");
-			if(isEmpty(thumb)){
-				Toast.makeText(this, "thumb url null", Toast.LENGTH_SHORT).show();
-				return;
-			}
-			Image img = new Image(jsonImg.getString("url"), jsonImg.getString("titleNoFormatting"), thumb );
-			list.add(img);
-		}
-		imgAdapter.addAll(list);
-	}
-	
-	private RequestParams constructRequestParam(){
-		RequestParams params = new RequestParams();
-		
-		if(!isEmpty(filters.getColor())){
-			params.put(COLOR_KEY, filters.getColor());
-		}
-		if(!isEmpty(filters.getSize())){
-			params.put(SIZE_KEY, filters.getSize());
-		}
-		if(!isEmpty(filters.getType())){
-			params.put(TYPE_KEY, filters.getType());
-		}
-		if(!isEmpty(filters.getColor())){
-			params.put(SITE_KEY, filters.getSite());
-		}
-		
-		return params;
-	}
-	
-	private boolean isEmpty(String str){
-		if(str == null || str.trim().length() == 0 || str.equals("") || str.equals("any")){
-			return true;
-		}
-		return false;
 	}
 
 }

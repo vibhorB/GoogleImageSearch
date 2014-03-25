@@ -12,8 +12,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 public class FilterActivity extends Activity {
 	
@@ -21,7 +21,8 @@ public class FilterActivity extends Activity {
 	Spinner colorSpinner;
 	Spinner typeSpinner;
 	EditText site;
-	ImageButton submit;
+	TextView submit;
+	TextView cancel;
 	Filters filter;
 
 	@Override
@@ -32,7 +33,8 @@ public class FilterActivity extends Activity {
 		colorSpinner = (Spinner) findViewById(R.id.spColor);
 		typeSpinner = (Spinner) findViewById(R.id.spType);
 		site = (EditText) findViewById(R.id.etSite);
-		submit = (ImageButton) findViewById(R.id.imageButton1);
+		submit = (TextView) findViewById(R.id.tvSearch);
+		cancel = (TextView) findViewById(R.id.tvCancel);
 		
 		filter = (Filters) getIntent().getSerializableExtra(ImageActivity.FILTER_KEY);
 		initSpinners();
@@ -51,6 +53,15 @@ public class FilterActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				setFiltersAndFinishActivity();
+			}
+		});
+		
+		cancel.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				setResult(RESULT_CANCELED);
+				finish();
 			}
 		});
 	}

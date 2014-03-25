@@ -4,9 +4,10 @@
     <item android:id="@+id/action_search"
           android:orderInCategory="5"
           android:title="@string/search"
-          android:icon="@drawable/ic_action_search"
-          android:showAsAction="always"
-           android:actionViewClass="android.widget.SearchView"/>
+          android:icon="@drawable/ic_search"
+          android:showAsAction="collapseActionView|ifRoom"
+
+          android:actionViewClass="android.widget.SearchView"/>
           <!--   android:actionViewClass="com.actionbarsherlock.widget.SearchView"
           android:showAsAction="ifRoom|collapseActionView" -->
           
@@ -15,6 +16,13 @@
           android:orderInCategory="5"
           android:title="@string/filter"
           android:icon="@drawable/filter_icon"
-          android:showAsAction="ifRoom|collapseActionView" />
+          android:showAsAction="always" />
+    
+    <item
+        android:id="@+id/action_reset"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:title="@string/reset"
+        android:icon="@drawable/ic_refresh"/>
 
 </menu>
