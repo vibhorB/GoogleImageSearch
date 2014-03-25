@@ -16,5 +16,6 @@
     <string name="search">Search</string>
     <string name="title_activity_filter">Apply Filters</string>
     <string name="reset">Reset Filters</string>
+    <string name="share">Share</string>
 
 </resources>

@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -12,6 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
@@ -24,19 +26,34 @@ import com.loopj.android.image.SmartImageView;
 public class FullImageActivity extends Activity {
 	
 	private ShareActionProvider miShareAction;
+	private Handler handler = new Handler();
+	private Runnable runnable;
+	private Context context;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_full_image);
 		getActionBar().setDisplayHomeAsUpEnabled(true);
-		
+		context = this;
 		 Image img = (Image) getIntent().getSerializableExtra("result");
 		 SmartImageView imView = (SmartImageView) findViewById(R.id.ivFull);
 		 TextView tvTtl = (TextView) findViewById(R.id.txtFullTitle);
 		 imView.setImageUrl(img.getImageUrl());
 		 tvTtl.setText(img.getImageTitle());
 
+		runnable = new Runnable() {
+				
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					//Toast.makeText(context, "runnable", Toast.LENGTH_SHORT).show();
+					setupShareAction();
+					
+				}
+			};
+			
+			handler.postDelayed(runnable, 2000);
 	}
 
 	@Override
@@ -46,8 +63,8 @@ public class FullImageActivity extends Activity {
 		 MenuItem item = menu.findItem(R.id.menu_item_share);
 		    // Fetch and store ShareActionProvider
 		 miShareAction = (ShareActionProvider) item.getActionProvider();
-		 setupShareAction();
-		    // Return true to display menu
+		 //miShareAction.setShareIntent(null);
+		 //setupShareAction();
 		    return true;
 	}
 	
