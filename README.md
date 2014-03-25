@@ -33,7 +33,7 @@ Optional features completed :
 
 Screenshots -
 
-![Screenshot](https://github.com/vibhorB/GoogleImageSearch/blob/master/screenshots/first_screen.png)
+![Screenshot](https://raw.githubusercontent.com/vibhorB/GoogleImageSearch/master/screenshots/first_screen.png)
 ![alt tag](https://github.com/vibhorB/GoogleImageSearch/blob/master/screenshots/enter_query.png)
 ![alt tag](https://github.com/vibhorB/GoogleImageSearch/blob/master/screenshots/search_results.png)
 ![alt tag](https://github.com/vibhorB/GoogleImageSearch/blob/master/screenshots/scroll_working.png)
