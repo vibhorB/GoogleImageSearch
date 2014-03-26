@@ -218,7 +218,7 @@ public class ImageActivity extends Activity {
 		if(!isEmpty(filters.getType())){
 			params.put(TYPE_KEY, filters.getType());
 		}
-		if(!isEmpty(filters.getColor())){
+		if(!isEmpty(filters.getSite())){
 			params.put(SITE_KEY, filters.getSite());
 		}
 		
