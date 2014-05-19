@@ -57,18 +57,12 @@ Google Image Search App with share and download
 
  
 
- **Contributing**
+**Contributing**
 
- 
+Please fork this repository and contribute back using
 
- Please fork this repository and contribute back using
+[pull requests](https://github.com/vibhorB/GoogleImageSearch/pulls).
 
- [pull requests](https://github.com/vibhorB/GoogleImageSearch/pulls).
-
- 
-
- Any contributions, large or small, major features, bug fixes, additional
-
- language translations, unit/integration tests are welcomed and appreciated
-
- but will be thoroughly reviewed and discussed.
+Any contributions, large or small, major features, bug fixes, additional
+language translations, unit/integration tests are welcomed and appreciated
+but will be thoroughly reviewed and discussed.
